@@ -146,7 +146,9 @@ public class UpdateController {
             } else if (message.hasVideo()) {
                 fileId = "video_" + message.getVideo().getFileId();
             } else if (message.hasPhoto()) {
-                fileId = "photo_" + message.getPhoto().get(3).getFileId();
+                List<PhotoSize> photo = message.getPhoto();
+
+                fileId = "photo_" + photo.get(photo.size() - 1).getFileId();
             } else {
                 fileId = "";
             }
@@ -155,7 +157,7 @@ public class UpdateController {
             usersFiles.get(telegramId).add(fileId);
             restartTimer(userStatus);
         } else {
-            createSendMessage(update, "Unsupported message in messageProcessing().", null);
+            createSendMessage(update, "Unsupported message", null);
             log.info(message.getChatId() + " unsupported message.");
         }
 

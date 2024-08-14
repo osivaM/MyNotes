@@ -254,7 +254,9 @@ public class NoteServiceImpl implements NoteService {
             }
         }
 
-        keyboardMarkup.setKeyboard(Collections.singletonList(keyboardButtons));
+        if (keyboardMarkup.getKeyboard() == null) {
+            keyboardMarkup.setKeyboard(Collections.singletonList(keyboardButtons));
+        }
 
         return response;
     }
@@ -300,7 +302,7 @@ public class NoteServiceImpl implements NoteService {
             note.getFileIds().addAll(usersFiles);
             userStatus.setCurrentStep(UserStatus.NOTHING);
 
-            return "Files have been added.\n" + showNote(userStatus, note.getTransliterateName(), fileIdsForShow, keyboardMarkup);
+            return "Files have been added.\n\n" + showNote(userStatus, note.getTransliterateName(), fileIdsForShow, keyboardMarkup);
         } else {
             Note note = new Note();
 

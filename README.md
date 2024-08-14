@@ -20,9 +20,13 @@ You can forward messages from channels to the bot. In this case, a direct link t
 
 ### Editing Notes
 
-Additionally, we were unable to implement a suitable method for editing notes through the bot, so you can edit notes via the website - [https://myvisitcard.freemyip.com](https://myvisitcard.freemyip.com).
+Additionally, we were unable to implement a suitable method for editing notes through the bot, so you can edit notes via the website - [https://mynotesproject.freemyip.com](https://mynotesproject.freemyip.com).
 
 ## Future Work
+
+- Admin dashboard
+- Tests
+- Code improvement
 
 Work on the application is ongoing.
 
@@ -48,8 +52,12 @@ Work on the application is ongoing.
 
 ### Редактирование заметок
 
-Также не удалось реализовать приемлемый способ редактирования заметки через бота, поэтому отредактировать заметку можно через сайт - [https://myvisitcard.freemyip.com](https://myvisitcard.freemyip.com).
+Также не удалось реализовать приемлемый способ редактирования заметки через бота, поэтому отредактировать заметку можно через сайт - [https://mynotesproject.freemyip.com](https://mynotesproject.freemyip.com).
 
 ## Будущие работы
+
+- Панель управления администратора
+- Тесты
+- Совершенствование кода
 
 Работа над приложением продолжается.

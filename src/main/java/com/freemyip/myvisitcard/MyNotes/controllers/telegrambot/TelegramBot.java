@@ -4,20 +4,24 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
-import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.TelegramBotsApi;
+import org.telegram.telegrambots.bots.TelegramWebhookBot;
+import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.*;
+import org.telegram.telegrambots.meta.api.methods.updates.SetWebhook;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 @Controller
 @RequiredArgsConstructor
-public class TelegramBot extends TelegramLongPollingBot {
+public class TelegramBot extends TelegramWebhookBot {
     @Value("${bot.name}")
     private String botName;
     @Value("${bot.token}")
     private String botToken;
+    @Value("${bot.path}")
+    private String botPath;
+    @Value("${bot.uri}")
+    private String botUri;
 
     private final UpdateController updateController;
 
@@ -31,22 +35,28 @@ public class TelegramBot extends TelegramLongPollingBot {
         return botToken;
     }
 
+    @Override
+    public String getBotPath() {
+        return botPath;
+    }
+
     @PostConstruct
     public void init() {
-        updateController.telegramBot(this);
-
         try {
-            TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
-
-            telegramBotsApi.registerBot(this);
+            SetWebhook webhook = SetWebhook.builder()
+                    .url(botUri)
+                    .build();
+            this.setWebhook(webhook);
         } catch (TelegramApiException e) {
             System.out.println(e.getMessage());
         }
+
+        updateController.telegramBot(this);
     }
 
     @Override
-    public void onUpdateReceived(Update update) {
-        updateController.checkUpdate(update);
+    public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
+        return null;
     }
 
     public void sendTextMessage(SendMessage sendMessage) {

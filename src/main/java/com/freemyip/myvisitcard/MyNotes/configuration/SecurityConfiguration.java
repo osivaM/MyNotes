@@ -1,11 +1,11 @@
 package com.freemyip.myvisitcard.MyNotes.configuration;
 
+import com.freemyip.myvisitcard.MyNotes.services.impl.UserDetailsServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -14,13 +14,15 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 @AllArgsConstructor
 public class SecurityConfiguration {
-    private UserDetailsService userDetailsService;
+    private UserDetailsServiceImpl detailsService;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
+                .csrf((csrf) -> csrf
+                        .ignoringRequestMatchers("/callback/update"))
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/", "/fonts/**", "/images/**").permitAll()
+                        .requestMatchers("/callback/update", "/fonts/**", "/images/**").permitAll()
                         .anyRequest().authenticated())
                 .formLogin((form) -> form
                         .loginPage("/login").permitAll()
@@ -29,7 +31,7 @@ public class SecurityConfiguration {
                         .invalidateHttpSession(true)
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login").permitAll())
-                .userDetailsService(userDetailsService)
+                .userDetailsService(detailsService)
                 .build();
     }
 

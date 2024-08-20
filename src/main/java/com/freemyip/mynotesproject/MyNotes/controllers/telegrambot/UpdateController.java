@@ -65,9 +65,8 @@ public class UpdateController {
         if (message.getForwardFrom() != null) {
             createSendMessage(update, "Forwarding messages from private chats has not yet been implemented.", null);
         } else if (forwardChat != null) {
-            keyboardMarkup = new InlineKeyboardMarkup();
-
-            createSendMessage(update, noteService.createNote(update, userStatus, new ArrayList<>(), keyboardMarkup), null);
+            userStatus.setCurrentStep(UserStatus.FORWARD_FROM_CHANEL);
+            restartTimer(userStatus, update);
         } else if (message.hasText()) {
             text = message.getText();
 
@@ -155,7 +154,7 @@ public class UpdateController {
 
             usersFiles.putIfAbsent(telegramId, new ArrayList<>());
             usersFiles.get(telegramId).add(fileId);
-            restartTimer(userStatus);
+            restartTimer(userStatus, null);
         } else {
             createSendMessage(update, "Unsupported message", null);
             log.info(message.getChatId() + " unsupported message.");
@@ -164,7 +163,7 @@ public class UpdateController {
         userStatusService.updateUserStatus(userStatus);
     }
 
-    private void restartTimer(UserStatus userStatus) {
+    private void restartTimer(UserStatus userStatus, Update update) {
         Long telegramId = userStatus.getTelegramUserId();
         InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
 
@@ -179,13 +178,24 @@ public class UpdateController {
             public void run() {
                 List<String> fileIds = new ArrayList<>();
 
-                createShowNoteMessage(userStatus,
-                        noteService.createNoteWithFiles(userStatus, usersFiles.remove(telegramId), fileIds, keyboardMarkup),
-                        fileIds,
-                        userStatus.getCurrentStep().equals(UserStatus.WAITING_CATEGORY_FOR_NOTE) ? null : keyboardMarkup);
+                if (userStatus.getCurrentStep().equals(UserStatus.FORWARD_FROM_CHANEL)) {
+                    if (update.getMessage().getForwardFromChat().getUserName() == null) {
+                        userStatus.setCurrentStep(UserStatus.NOTHING);
+                        createSendMessage(update,
+                                "The \"" + update.getMessage().getForwardFromChat().getTitle() + "\" channel does not allow forwarding messages to bots.",
+                                null);
+                    } else {
+                        createSendMessage(update, noteService.createNote(update, userStatus, fileIds, keyboardMarkup), keyboardMarkup);
+                    }
+                } else {
+                    createShowNoteMessage(userStatus,
+                            noteService.createNoteWithFiles(userStatus, usersFiles.remove(telegramId), fileIds, keyboardMarkup),
+                            fileIds,
+                            userStatus.getCurrentStep().equals(UserStatus.WAITING_CATEGORY_FOR_NOTE) ? null : keyboardMarkup);
+                }
                 userStatusService.updateUserStatus(userStatus);
             }
-        }, 2000);
+        }, 500);
 
         usersTimer.put(telegramId, timer);
     }
@@ -436,7 +446,9 @@ public class UpdateController {
     private void cancelAction(UserStatus userStatus) {
         if (userStatus.getCurrentStep().equals(UserStatus.CREATING_CATEGORY_FOR_NOTE)) {
             noteCategoryService.deleteCategoryById(userStatus.getCurrentCategoryId());
-        } else if (userStatus.getCurrentStep().equals(UserStatus.WAITING_NOTE_LINK) ||
+            noteService.deleteNoteById(userStatus.getCurrentNoteId());
+        } else if (userStatus.getCurrentStep().equals(UserStatus.WAITING_CATEGORY_FOR_NOTE) ||
+                userStatus.getCurrentStep().equals(UserStatus.WAITING_NOTE_LINK) ||
         userStatus.getCurrentStep().equals(UserStatus.WAITING_NOTE_CONTENT)) {
             noteService.deleteNoteById(userStatus.getCurrentNoteId());
         }

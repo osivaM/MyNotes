@@ -20,6 +20,7 @@ public class UserStatus {
     public static final String WAITING_CATEGORY_NAME = "WAITING_CATEGORY_NAME";
     public static final String UPDATING_CATEGORY = "UPDATING_CATEGORY";
     public static final String DELETING_CATEGORY = "DELETING_CATEGORY";
+    public static final String FORWARD_FROM_CHANEL = "FORWARD_FROM_CHANEL";
     public static final String WAITING_CATEGORY_FOR_NOTE = "WAITING_CATEGORY_FOR_NOTE";
     public static final String CREATING_CATEGORY_FOR_NOTE = "CREATING_CATEGORY_FOR_NOTE";
     public static final String WAITING_NOTE_NAME = "WAITING_NOTE_NAME";

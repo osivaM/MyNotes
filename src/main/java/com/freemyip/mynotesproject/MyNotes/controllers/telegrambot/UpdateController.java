@@ -179,14 +179,7 @@ public class UpdateController {
                 List<String> fileIds = new ArrayList<>();
 
                 if (userStatus.getCurrentStep().equals(UserStatus.FORWARD_FROM_CHANEL)) {
-                    if (update.getMessage().getForwardFromChat().getUserName() == null) {
-                        userStatus.setCurrentStep(UserStatus.NOTHING);
-                        createSendMessage(update,
-                                "The \"" + update.getMessage().getForwardFromChat().getTitle() + "\" channel does not allow forwarding messages to bots.",
-                                null);
-                    } else {
-                        createSendMessage(update, noteService.createNote(update, userStatus, fileIds, keyboardMarkup), keyboardMarkup);
-                    }
+                    createSendMessage(update, noteService.createNote(update, userStatus, fileIds, keyboardMarkup), keyboardMarkup);
                 } else {
                     createShowNoteMessage(userStatus,
                             noteService.createNoteWithFiles(userStatus, usersFiles.remove(telegramId), fileIds, keyboardMarkup),

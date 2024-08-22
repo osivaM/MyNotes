@@ -14,7 +14,6 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -139,13 +138,26 @@ public class NoteServiceImpl implements NoteService {
     @Transactional
     public String createNote(Update update, UserStatus userStatus, List<String> fileIds, InlineKeyboardMarkup keyboardMarkup) {
         Message message = update.getMessage();
-        Chat forwardChat = message.getForwardFromChat();
-        String text = forwardChat == null ? message.getText() : "https://t.me/" + forwardChat.getUserName() + "/" + message.getForwardFromMessageId();
-        String transliterateText = transliterator.transliterate(text);
+        String text;
+        String transliterateText;
         String response;
         long userId = userStatus.getUserId();
         List<InlineKeyboardButton> keyboardButtons = new ArrayList<>();
         Note note;
+
+        if (userStatus.getCurrentStep().equals(UserStatus.FORWARD_FROM_CHANEL)) {
+            String forwardChatName = message.getForwardFromChat().getUserName();
+            String forwardChatId = String.valueOf(message.getForwardFromChat().getId());
+
+            if (forwardChatName == null) {
+                text = "https://t.me/c/" + forwardChatId.substring(4) + "/" + message.getForwardFromMessageId();
+            } else {
+                text = "https://t.me/" + forwardChatName + "/" + message.getForwardFromMessageId();
+            }
+        } else {
+            text = message.getText();
+        }
+        transliterateText = transliterator.transliterate(text);
 
         switch (userStatus.getCurrentStep()) {
             case UserStatus.WAITING_CATEGORY_FOR_NOTE -> {

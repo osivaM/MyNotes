@@ -8,15 +8,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = "username"))
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User implements UserDetails {
     @Id
@@ -58,3 +57,5 @@ public class User implements UserDetails {
         return true;
     }
 }
+
+

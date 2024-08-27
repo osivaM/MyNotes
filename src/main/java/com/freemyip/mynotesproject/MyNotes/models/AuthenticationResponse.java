@@ -1,4 +1,4 @@
-package com.freemyip.mynotesproject.MyNotes.configuration;
+package com.freemyip.mynotesproject.MyNotes.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

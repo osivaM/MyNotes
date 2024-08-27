@@ -29,7 +29,6 @@ public class NoteServiceImpl implements NoteService {
     private final UserRepository userRepository;
     private final NoteCategoryService noteCategoryService;
     private final Transliterator transliterator;
-    private final UserService userService;
 
     @Override
     public List<Note> getAllNotesForCategoryFromUser(String name, User user) {
@@ -169,7 +168,7 @@ public class NoteServiceImpl implements NoteService {
                     NoteCategory noteCategory = new NoteCategory();
 
                     noteCategory.setName(text);
-                    noteCategory.setUser(userService.getUserById(userStatus.getUserId()));
+                    noteCategory.setUser(userRepository.findUserById(userStatus.getUserId()).get());
                     noteCategoryService.createCategory(noteCategory);
 
                     userStatus.setCurrentCategoryId(noteCategory.getId());
@@ -195,7 +194,7 @@ public class NoteServiceImpl implements NoteService {
                     if (userStatus.getCurrentNoteId() == null) {
                         note = new Note();
 
-                        note.setUser(userService.getUserById(userStatus.getUserId()));
+                        note.setUser(userRepository.findUserById(userStatus.getUserId()).get());
                         note.setCreateDate(LocalDateTime.now());
 
                         userStatus.setCurrentStep(UserStatus.WAITING_NOTE_LINK);
@@ -254,7 +253,7 @@ public class NoteServiceImpl implements NoteService {
                     note.setContent(text);
                 }
 
-                note.setUser(userService.getUserById(userStatus.getUserId()));
+                note.setUser(userRepository.findUserById(userStatus.getUserId()).get());
                 note.setCreateDate(LocalDateTime.now());
                 noteRepository.save(note);
 
@@ -319,7 +318,7 @@ public class NoteServiceImpl implements NoteService {
             Note note = new Note();
 
             note.setCreateDate(LocalDateTime.now());
-            note.setUser(userService.getUserById(userStatus.getUserId()));
+            note.setUser(userRepository.findUserById(userStatus.getUserId()).get());
             note.setFileIds(usersFiles);
             noteRepository.save(note);
 

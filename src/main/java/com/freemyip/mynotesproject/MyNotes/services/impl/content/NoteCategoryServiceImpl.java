@@ -1,5 +1,6 @@
 package com.freemyip.mynotesproject.MyNotes.services.impl.content;
 
+import com.freemyip.mynotesproject.MyNotes.repositories.UserRepository;
 import com.freemyip.mynotesproject.MyNotes.services.content.NoteCategoryService;
 import com.freemyip.mynotesproject.MyNotes.models.User;
 import com.freemyip.mynotesproject.MyNotes.models.UserStatus;
@@ -27,7 +28,7 @@ public class NoteCategoryServiceImpl implements NoteCategoryService {
     private final NoteCategoryRepository noteCategoryRepository;
     private final NoteRepository noteRepository;
     private final Transliterator transliterator;
-    private final UserService userService;
+    private final UserRepository userRepository;
 
     @Override
     public List<NoteCategory> getAllCategoriesForUser(String username) {
@@ -86,7 +87,8 @@ public class NoteCategoryServiceImpl implements NoteCategoryService {
         }
 
         NoteCategory newNoteCategory = new NoteCategory();
-        User user = userService.getUserById(userId);
+        User user = userRepository.findUserById(userId)
+                .orElseThrow();
 
         newNoteCategory.setName(name);
         newNoteCategory.setTransliterateName(transliterateName);

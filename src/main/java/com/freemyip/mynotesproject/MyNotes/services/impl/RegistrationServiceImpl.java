@@ -1,18 +1,23 @@
 package com.freemyip.mynotesproject.MyNotes.services.impl;
 
+import com.freemyip.mynotesproject.MyNotes.models.Role;
 import com.freemyip.mynotesproject.MyNotes.models.User;
 import com.freemyip.mynotesproject.MyNotes.models.UserStatus;
+import com.freemyip.mynotesproject.MyNotes.repositories.UserRepository;
 import com.freemyip.mynotesproject.MyNotes.services.RegistrationService;
-import com.freemyip.mynotesproject.MyNotes.services.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class RegistrationServiceImpl implements RegistrationService {
-    private final UserService userService;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public String registration(Update update, UserStatus userStatus) {
@@ -24,8 +29,9 @@ public class RegistrationServiceImpl implements RegistrationService {
         long chatId = message.getChatId();
 
         if (registrationStatus == null) {
-            if (userService.findUserByTelegramId(chatId)) {
-                User user = userService.getUserByTelegramId(chatId);
+            if (userRepository.existsUserByTelegramId(chatId)) {
+                User user = userRepository.findUserByTelegramId(chatId)
+                                .orElseThrow();
 
                 userStatus.setUserId(user.getId());
                 userStatus.setTelegramUserId(chatId);
@@ -46,23 +52,25 @@ public class RegistrationServiceImpl implements RegistrationService {
         } else {
             switch (currentStep) {
                 case UserStatus.WAITING_USERNAME -> {
-                    if (userService.findUserByUsername(text)) {
+                    if (userRepository.existsUserByUsername(text)) {
                         response = "A user with the same name already exists, enter another name:";
                     } else if (!text.matches("^[a-zA-Z0-9._-]+$")) {
                         response = "Invalid characters for the login. Use uppercase and lowercase Latin letters, as well as characters ( _ - . ).";
                     } else {
-                        User user = new User();
+                        User user = User.builder()
+                                .username(text)
+                                .password(passwordEncoder.encode("password"))
+                                .firstName(message.getFrom().getFirstName())
+                                .lastName(message.getFrom().getLastName())
+                                .role(Role.USER)
+                                .registrationDate(LocalDateTime.now())
+                                .telegramId(chatId)
+                                .build();
 
-                        user.setTelegramId(chatId);
-                        user.setUsername(text);
-                        user.setPassword("password");
-                        user.setFirstName(message.getFrom().getFirstName());
-                        user.setLastName(message.getFrom().getLastName());
-                        userService.createUserWithRole(user, "ROLE_USER");
-
+                        userRepository.save(user);
                         userStatus.setCurrentStep(UserStatus.WAITING_PASSWORD);
                         userStatus.setUsername(text);
-                        userStatus.setUserId(userService.getUserByTelegramId(chatId).getId());
+                        userStatus.setUserId(user.getId());
 
                         response = "Great. Now enter the password:";
                     }
@@ -71,11 +79,12 @@ public class RegistrationServiceImpl implements RegistrationService {
                     if (!text.matches("^[a-zA-Z0-9!@#$%^&*()_+=\\-\\[\\]{}|;:'\",.<>?/]+$")) {
                         response = "Invalid characters for the password. Use uppercase and lowercase Latin letters, and various symbols.";
                     } else {
-                        User user = userService.getUserById(userStatus.getUserId());
+                        User user = userRepository.findUserById(userStatus.getUserId())
+                                .orElseThrow();
 
-                        user.setPassword(text);
+                        user.setPassword(passwordEncoder.encode(text));
 
-                        userService.updateUser(user);
+                        userRepository.save(user);
 
                         userStatus.setUserRegistrationStatus(UserStatus.REGISTERED);
                         userStatus.setCurrentStep(UserStatus.NOTHING);

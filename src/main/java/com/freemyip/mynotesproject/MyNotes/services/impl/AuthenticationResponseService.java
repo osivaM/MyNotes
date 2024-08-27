@@ -1,10 +1,9 @@
 package com.freemyip.mynotesproject.MyNotes.services.impl;
 
-import com.freemyip.mynotesproject.MyNotes.configuration.AuthenticationResponse;
+import com.freemyip.mynotesproject.MyNotes.models.AuthenticationResponse;
 import com.freemyip.mynotesproject.MyNotes.models.AuthenticationRequest;
 import com.freemyip.mynotesproject.MyNotes.models.User;
 import com.freemyip.mynotesproject.MyNotes.repositories.UserRepository;
-import com.freemyip.mynotesproject.MyNotes.services.impl.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

@@ -1,6 +1,6 @@
 package com.freemyip.mynotesproject.MyNotes.controllers;
 
-import com.freemyip.mynotesproject.MyNotes.configuration.AuthenticationResponse;
+import com.freemyip.mynotesproject.MyNotes.models.AuthenticationResponse;
 import com.freemyip.mynotesproject.MyNotes.models.AuthenticationRequest;
 import com.freemyip.mynotesproject.MyNotes.services.impl.AuthenticationResponseService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +18,10 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest authenticationRequest) {
+
+        System.out.println(authenticationRequest.getUsername());
+        System.out.println(authenticationRequest.getPassword());
+
         return ResponseEntity.ok(responseService.authenticate(authenticationRequest));
     }
 }

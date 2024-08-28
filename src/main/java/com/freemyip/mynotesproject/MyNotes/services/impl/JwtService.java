@@ -16,8 +16,10 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
-    @Value("${auth.secret.key}")
+    @Value("${app.secretKey}")
     private String secretKey;
+    @Value("${app.expirationTime}")
+    private int expirationTime;
 
     public String getUsernameFromToken(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -31,8 +33,9 @@ public class JwtService {
         return Jwts.builder()
                 .claims(claimsObjectMap)
                 .subject(userDetails.getUsername())
+                .claim("roles", userDetails.getAuthorities())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
+                .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSecretKey())
                 .compact();
     }

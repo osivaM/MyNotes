@@ -1,10 +1,14 @@
 package com.freemyip.mynotesproject.MyNotes.services.impl.content;
 
+import com.freemyip.mynotesproject.MyNotes.exceptions.DuplicateEntityException;
+import com.freemyip.mynotesproject.MyNotes.exceptions.EmptyNameException;
 import com.freemyip.mynotesproject.MyNotes.models.User;
 import com.freemyip.mynotesproject.MyNotes.models.UserStatus;
+import com.freemyip.mynotesproject.MyNotes.models.content.CreateNoteRequest;
 import com.freemyip.mynotesproject.MyNotes.models.content.Note;
 import com.freemyip.mynotesproject.MyNotes.models.content.NoteCategory;
 import com.freemyip.mynotesproject.MyNotes.repositories.UserRepository;
+import com.freemyip.mynotesproject.MyNotes.repositories.content.NoteCategoryRepository;
 import com.freemyip.mynotesproject.MyNotes.repositories.content.NoteRepository;
 import com.freemyip.mynotesproject.MyNotes.services.UserService;
 import com.freemyip.mynotesproject.MyNotes.services.content.NoteCategoryService;
@@ -12,6 +16,7 @@ import com.freemyip.mynotesproject.MyNotes.services.content.NoteService;
 import com.freemyip.mynotesproject.MyNotes.util.Transliterator;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -29,10 +34,11 @@ public class NoteServiceImpl implements NoteService {
     private final UserRepository userRepository;
     private final NoteCategoryService noteCategoryService;
     private final Transliterator transliterator;
+    private final NoteCategoryRepository categoryRepository;
 
     @Override
-    public List<Note> getAllNotesForCategoryFromUser(String name, User user) {
-        return noteRepository.findAllByNoteCategoryNameAndUser(name, user);
+    public List<Note> getAllByNoteCategoryId(Long categoryId) {
+        return noteRepository.findAllByNoteCategoryId(categoryId);
     }
 
     @Override
@@ -274,34 +280,32 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     @Transactional
-    public Long createNote(Note note) {
-        String username = note.getUser().getUsername();
-        User user = userRepository.findUserByUsername(username)
-                        .orElseThrow(() -> new EntityNotFoundException("User with name " + username + " not found"));
-        NoteCategory noteCategory = note.getNoteCategory();
-        String transliterateName = transliterator.transliterate(note.getName());
+    public Note createNote(CreateNoteRequest noteRequest, UserDetails userDetails) {
+        String noteName = noteRequest.getName();
+        Long categoryId = noteRequest.getCategoryId();
 
-        if (noteCategory == null) {
-            if (noteCategoryService.existsByTransliterateNameAndUserId("temporary", user.getId())) {
-                noteCategory = noteCategoryService.getCategoryByTransliterateNameAndUserId("temporary", user.getId());
-            } else {
-                noteCategory = new NoteCategory();
-                noteCategory.setName("Temporary");
-                noteCategory.setUser(user);
-
-                noteCategoryService.createCategory(noteCategory);
-            }
-        }
-        if (noteRepository.existsByTransliterateNameAndNoteCategoryId(transliterateName, noteCategory.getId())) {
-            return -1L;
+        if (noteName.isEmpty()) {
+            throw new EmptyNameException("The name cannot be empty");
         }
 
-        note.setTransliterateName(transliterateName);
+        if (noteRepository.existsByNameAndNoteCategoryId(noteName, categoryId)) {
+            throw new DuplicateEntityException("Note with name " + noteRequest.getName() + " already exists");
+        }
+
+        Note note = new Note();
+
+        note.setType("note");
+        note.setName(noteName);
+        note.setTransliterateName(transliterator.transliterate(noteName));
+        note.setLink(noteRequest.getLink());
+        note.setContent(noteRequest.getContent());
         note.setCreateDate(LocalDateTime.now());
-        note.setNoteCategory(noteCategory);
+        categoryRepository.findById(categoryId).ifPresent(note::setNoteCategory);
+        userRepository.findUserByUsername(userDetails.getUsername()).ifPresent(note::setUser);
+
         noteRepository.save(note);
 
-        return noteCategory.getId();
+        return note;
     }
 
     @Override
@@ -344,6 +348,35 @@ public class NoteServiceImpl implements NoteService {
         note.setTransliterateName(transliterateName);
 
         noteRepository.save(note);
+    }
+
+    @Override
+    @Transactional
+    public Note updateNote(Note editedNote, Long categoryId) {
+        Note currentNote = noteRepository.getById(editedNote.getId());
+        String newName = editedNote.getName();
+
+        if (newName == null) {
+            throw new EmptyNameException("The name cannot be empty");
+        }
+        if (currentNote == null) {
+            throw new EntityNotFoundException("Update error. Note not found.");
+        }
+        if (!currentNote.getName().equals(newName)) {
+            if (noteRepository.existsByNameAndNoteCategoryId(newName, currentNote.getNoteCategory().getId())) {
+                throw new DuplicateEntityException("A note with name " + newName + " already exists. Please choose another name.");
+            }
+        }
+
+        currentNote.setName(newName);
+        currentNote.setTransliterateName(transliterator.transliterate(newName));
+        currentNote.setLink(editedNote.getLink());
+        currentNote.setContent(editedNote.getContent());
+        currentNote.setUpdateDate(LocalDateTime.now());
+
+        noteRepository.save(currentNote);
+
+        return currentNote;
     }
 
     @Override

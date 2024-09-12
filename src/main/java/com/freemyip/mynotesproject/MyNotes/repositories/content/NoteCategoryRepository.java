@@ -11,6 +11,7 @@ public interface NoteCategoryRepository extends ListCrudRepository<NoteCategory,
     List<NoteCategory> getAllByUserId(Long userId);
     NoteCategory getById(Long id);
     Optional<NoteCategory> findByTransliterateNameAndUserId(String transliterateName, Long userId);
+    boolean existsByNameAndUserUsername(String name, String username);
     boolean existsByTransliterateNameAndUserId(String transliterateName, Long userId);
     void deleteAllByUserId(Long userId);
 }

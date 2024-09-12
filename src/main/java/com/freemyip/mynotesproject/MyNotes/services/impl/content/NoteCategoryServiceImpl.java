@@ -1,5 +1,7 @@
 package com.freemyip.mynotesproject.MyNotes.services.impl.content;
 
+import com.freemyip.mynotesproject.MyNotes.exceptions.DuplicateEntityException;
+import com.freemyip.mynotesproject.MyNotes.exceptions.EmptyNameException;
 import com.freemyip.mynotesproject.MyNotes.repositories.UserRepository;
 import com.freemyip.mynotesproject.MyNotes.services.content.NoteCategoryService;
 import com.freemyip.mynotesproject.MyNotes.models.User;
@@ -7,7 +9,6 @@ import com.freemyip.mynotesproject.MyNotes.models.UserStatus;
 import com.freemyip.mynotesproject.MyNotes.models.content.NoteCategory;
 import com.freemyip.mynotesproject.MyNotes.repositories.content.NoteCategoryRepository;
 import com.freemyip.mynotesproject.MyNotes.repositories.content.NoteRepository;
-import com.freemyip.mynotesproject.MyNotes.services.UserService;
 import com.freemyip.mynotesproject.MyNotes.util.Transliterator;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -25,37 +26,37 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class NoteCategoryServiceImpl implements NoteCategoryService {
-    private final NoteCategoryRepository noteCategoryRepository;
+    private final NoteCategoryRepository categoryRepository;
     private final NoteRepository noteRepository;
     private final Transliterator transliterator;
     private final UserRepository userRepository;
 
     @Override
-    public List<NoteCategory> getAllCategoriesForUser(String username) {
-        return noteCategoryRepository.findAllByUserUsername(username);
+    public List<NoteCategory> getAllCategoriesForUserUsername(String username) {
+        return categoryRepository.findAllByUserUsername(username);
     }
 
     @Override
     public NoteCategory getCategoryById(Long id) {
-        return noteCategoryRepository.findById(id)
+        return categoryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Category with id: " + id + " not found"));
     }
 
     @Override
     public NoteCategory getCategoryByTransliterateNameAndUserId(String transliterateName, long userId) {
-        return noteCategoryRepository.findByTransliterateNameAndUserId(transliterateName, userId)
+        return categoryRepository.findByTransliterateNameAndUserId(transliterateName, userId)
                 .orElseThrow(() -> new EntityNotFoundException("Category with name " + transliterateName + " not found."));
     }
 
     @Override
     public boolean existsByTransliterateNameAndUserId(String transliterationCategoryName, long userId) {
-        return noteCategoryRepository.existsByTransliterateNameAndUserId(transliterationCategoryName, userId);
+        return categoryRepository.existsByTransliterateNameAndUserId(transliterationCategoryName, userId);
     }
 
     @Override
     public String showListOfCategories(UserStatus userStatus, InlineKeyboardMarkup keyboardMarkup) {
         StringBuilder response = new StringBuilder();
-        List<NoteCategory> categoryList = noteCategoryRepository.getAllByUserId(userStatus.getUserId());
+        List<NoteCategory> categoryList = categoryRepository.getAllByUserId(userStatus.getUserId());
 
         keyboardMarkup.setKeyboard(Collections.singletonList(
                 Collections.singletonList(
@@ -75,6 +76,29 @@ public class NoteCategoryServiceImpl implements NoteCategoryService {
 
     @Override
     @Transactional
+    public NoteCategory createCategory(String name, String username) {
+        if (name == null) {
+            throw new EmptyNameException("The name cannot be empty");
+        }
+        if (categoryRepository.existsByNameAndUserUsername(name, username)) {
+            throw new DuplicateEntityException("Category with name " + name + " already exists");
+        }
+
+        NoteCategory newCategory = new NoteCategory();
+
+        newCategory.setType("category");
+        newCategory.setName(name);
+        newCategory.setTransliterateName(transliterator.transliterate(name));
+        newCategory.setCreateDate(LocalDateTime.now());
+        userRepository.findUserByUsername(username).ifPresent(newCategory::setUser);
+
+        categoryRepository.save(newCategory);
+
+        return newCategory;
+    }
+
+    @Override
+    @Transactional
     public String createCategory(Update update, UserStatus userStatus) {
         String name = update.getMessage().getText();
         String transliterateName = transliterator.transliterate(name);
@@ -82,7 +106,7 @@ public class NoteCategoryServiceImpl implements NoteCategoryService {
 
         userStatus.setCurrentCategoryId(null);
 
-        if (noteCategoryRepository.existsByTransliterateNameAndUserId(transliterateName, userId)) {
+        if (categoryRepository.existsByTransliterateNameAndUserId(transliterateName, userId)) {
             return "A category with that name already exists. Choose a different name:";
         }
 
@@ -95,10 +119,10 @@ public class NoteCategoryServiceImpl implements NoteCategoryService {
         newNoteCategory.setCreateDate(LocalDateTime.now());
         newNoteCategory.setUser(user);
 
-        noteCategoryRepository.save(newNoteCategory);
+        categoryRepository.save(newNoteCategory);
 
         userStatus.setCurrentStep(UserStatus.NOTHING);
-        noteCategoryRepository.findByTransliterateNameAndUserId(transliterateName, userId)
+        categoryRepository.findByTransliterateNameAndUserId(transliterateName, userId)
                 .ifPresent(category -> userStatus.setCurrentCategoryId(category.getId()));
 
         return "The " + name + " category has been created.";
@@ -109,14 +133,14 @@ public class NoteCategoryServiceImpl implements NoteCategoryService {
     public boolean createCategory(NoteCategory noteCategory) {
         String transliterationName = transliterator.transliterate(noteCategory.getName());
 
-        if (noteCategoryRepository.existsByTransliterateNameAndUserId(transliterationName, noteCategory.getUser().getId())) {
+        if (categoryRepository.existsByTransliterateNameAndUserId(transliterationName, noteCategory.getUser().getId())) {
             return false;
         }
 
         noteCategory.setCreateDate(LocalDateTime.now());
         noteCategory.setTransliterateName(transliterationName);
 
-        noteCategoryRepository.save(noteCategory);
+        categoryRepository.save(noteCategory);
 
         return true;
     }
@@ -134,15 +158,15 @@ public class NoteCategoryServiceImpl implements NoteCategoryService {
                 String name = update.getMessage().getText();
                 String transliterateName = transliterator.transliterate(name);
 
-                if (noteCategoryRepository.existsByTransliterateNameAndUserId(transliterateName, userStatus.getUserId())) {
+                if (categoryRepository.existsByTransliterateNameAndUserId(transliterateName, userStatus.getUserId())) {
                     keyboardMarkup.setKeyboard(new ArrayList<>());
                     response = "A category with that name already exists. Choose a different name:";
                 } else {
-                    NoteCategory noteCategory = noteCategoryRepository.getById(userStatus.getCurrentCategoryId());
+                    NoteCategory noteCategory = categoryRepository.getById(userStatus.getCurrentCategoryId());
 
                     noteCategory.setName(name);
                     noteCategory.setTransliterateName(transliterateName);
-                    noteCategoryRepository.save(noteCategory);
+                    categoryRepository.save(noteCategory);
                     userStatus.setCurrentStep(UserStatus.NOTHING);
 
                     response = "";
@@ -160,27 +184,27 @@ public class NoteCategoryServiceImpl implements NoteCategoryService {
     @Transactional
     public void updateCategory(NoteCategory noteCategory) {
         String transliterateName = transliterator.transliterate(noteCategory.getName());
-        NoteCategory categoryToUpdate = noteCategoryRepository.findById(noteCategory.getId())
+        NoteCategory categoryToUpdate = categoryRepository.findById(noteCategory.getId())
                         .orElseThrow(() -> new EntityNotFoundException("Category with id: " + noteCategory.getId() + " not found"));
 
-        if (noteCategoryRepository.existsByTransliterateNameAndUserId(transliterateName, categoryToUpdate.getUser().getId())) {
+        if (categoryRepository.existsByTransliterateNameAndUserId(transliterateName, categoryToUpdate.getUser().getId())) {
             return;
         }
 
         categoryToUpdate.setName(noteCategory.getName());
         categoryToUpdate.setTransliterateName(transliterateName);
 
-        noteCategoryRepository.save(categoryToUpdate);
+        categoryRepository.save(categoryToUpdate);
     }
 
     @Override
     @Transactional
     public void deleteCategoryById(Long id) {
         NoteCategory categoryToDelete =
-                noteCategoryRepository.findById(id)
+                categoryRepository.findById(id)
                         .orElseThrow(() -> new EntityNotFoundException("Category with id: " + id + " not found"));
 
         noteRepository.deleteAllByNoteCategoryId(categoryToDelete.getId());
-        noteCategoryRepository.delete(categoryToDelete);
+        categoryRepository.delete(categoryToDelete);
     }
 }

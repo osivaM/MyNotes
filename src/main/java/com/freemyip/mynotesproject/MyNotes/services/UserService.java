@@ -1,3 +1,8 @@
 package com.freemyip.mynotesproject.MyNotes.services;
 
-public interface UserService {}
+import com.freemyip.mynotesproject.MyNotes.models.User;
+
+public interface UserService {
+    User getUserByUsername(String username);
+    User updateUserData(User newUserData);
+}

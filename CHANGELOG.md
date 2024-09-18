@@ -75,3 +75,52 @@
 
 - **Controllers**:
     - `TelegramWebhookController`
+
+---
+
+## [1.0.0] - 2024-09-19
+
+### Refactor
+
+#### Security
+
+- Authentication using JWT tokens has been implemented
+- Implemented JWT filter and service for working with JWT
+
+#### Interaction with the client
+
+- Removed all templates used by Thymeleaf, now interaction with the client part will be carried out using the REST API
+- The corresponding REST Controllers are written
+
+#### Other changes
+
+- Completely rewritten UserService
+- The order of forming the list of users who cannot be deleted has been changed - now the list is formed by the admin on his control panel
+- Unique user counter implemented
+- User roles are no longer stored in the DB, they are now an enumeration class
+- Minor changes have affected almost all classes
+
+### Added
+
+- **configuration**:
+  - `ApplicationConfigaration`
+  - `JwtAuthenticationFilter`
+- **controllers**
+  - `AdminController`
+  - `AuthenticationController`
+  - `ContentController`
+  - `UserController`
+- **exceptions**
+  - `DuplicateEntityException`
+  - `EmptyNameException`
+- **models**
+  - `CreateCategoryRequest`
+  - `CreateNoteRequest`
+  - `AuthenticationRequest`
+  - `AuthenticationResponse`
+  - `UniqueUser`
+- **repositories**
+  - `UniqueUserRepository`
+- **services**
+  - `AuthenticationResponseService`
+  - `JwtService`

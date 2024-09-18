@@ -2,7 +2,6 @@ package com.freemyip.mynotesproject.MyNotes.services.impl.content;
 
 import com.freemyip.mynotesproject.MyNotes.exceptions.DuplicateEntityException;
 import com.freemyip.mynotesproject.MyNotes.exceptions.EmptyNameException;
-import com.freemyip.mynotesproject.MyNotes.models.User;
 import com.freemyip.mynotesproject.MyNotes.models.UserStatus;
 import com.freemyip.mynotesproject.MyNotes.models.content.CreateNoteRequest;
 import com.freemyip.mynotesproject.MyNotes.models.content.Note;
@@ -10,7 +9,6 @@ import com.freemyip.mynotesproject.MyNotes.models.content.NoteCategory;
 import com.freemyip.mynotesproject.MyNotes.repositories.UserRepository;
 import com.freemyip.mynotesproject.MyNotes.repositories.content.NoteCategoryRepository;
 import com.freemyip.mynotesproject.MyNotes.repositories.content.NoteRepository;
-import com.freemyip.mynotesproject.MyNotes.services.UserService;
 import com.freemyip.mynotesproject.MyNotes.services.content.NoteCategoryService;
 import com.freemyip.mynotesproject.MyNotes.services.content.NoteService;
 import com.freemyip.mynotesproject.MyNotes.util.Transliterator;

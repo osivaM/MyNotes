@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -21,6 +22,11 @@ public class AdminController {
     @JsonView(User.AdminViews.class)
     public ResponseEntity<List<User>> admin() {
         return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    @GetMapping("/unique-users")
+    public ResponseEntity<Map<String, Long>> countOfUniqueUsers() {
+        return ResponseEntity.ok(Map.of("count", userService.getCountUniqueUsers()));
     }
 
     @DeleteMapping("/delete-user")

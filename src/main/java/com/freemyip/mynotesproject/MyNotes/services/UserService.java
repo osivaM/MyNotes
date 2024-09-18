@@ -10,4 +10,5 @@ public interface UserService {
     User updateUserData(User newUserData);
     void deleteUserById(Long id);
     void setDeletionStatus(List<User> userList);
+    Long getCountUniqueUsers();
 }

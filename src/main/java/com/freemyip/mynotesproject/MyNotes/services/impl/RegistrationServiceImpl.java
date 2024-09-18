@@ -1,8 +1,10 @@
 package com.freemyip.mynotesproject.MyNotes.services.impl;
 
 import com.freemyip.mynotesproject.MyNotes.models.Role;
+import com.freemyip.mynotesproject.MyNotes.models.UniqueUser;
 import com.freemyip.mynotesproject.MyNotes.models.User;
 import com.freemyip.mynotesproject.MyNotes.models.UserStatus;
+import com.freemyip.mynotesproject.MyNotes.repositories.UniqueUserRepository;
 import com.freemyip.mynotesproject.MyNotes.repositories.UserRepository;
 import com.freemyip.mynotesproject.MyNotes.services.RegistrationService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import java.time.LocalDateTime;
 public class RegistrationServiceImpl implements RegistrationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UniqueUserRepository uniqueUserRepository;
 
     @Override
     public String registration(Update update, UserStatus userStatus) {
@@ -72,6 +75,14 @@ public class RegistrationServiceImpl implements RegistrationService {
                         userStatus.setCurrentStep(UserStatus.WAITING_PASSWORD);
                         userStatus.setUsername(text);
                         userStatus.setUserId(user.getId());
+
+                        if (!uniqueUserRepository.existsByTelegramId(chatId)) {
+                            uniqueUserRepository.save(UniqueUser
+                                    .builder()
+                                    .telegramId(chatId)
+                                    .username(text)
+                                    .build());
+                        }
 
                         response = "Great. Now enter the password:";
                     }

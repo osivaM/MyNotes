@@ -2,6 +2,7 @@ package com.freemyip.mynotesproject.MyNotes.services.impl;
 
 import com.freemyip.mynotesproject.MyNotes.exceptions.DuplicateEntityException;
 import com.freemyip.mynotesproject.MyNotes.models.User;
+import com.freemyip.mynotesproject.MyNotes.repositories.UniqueUserRepository;
 import com.freemyip.mynotesproject.MyNotes.repositories.UserRepository;
 import com.freemyip.mynotesproject.MyNotes.repositories.UserStatusRepository;
 import com.freemyip.mynotesproject.MyNotes.repositories.content.NoteCategoryRepository;
@@ -26,6 +27,7 @@ public class UserServiceImpl implements UserService {
     private final NoteRepository noteRepository;
     private final NoteCategoryRepository categoryRepository;
     private final UserStatusRepository userStatusRepository;
+    private final UniqueUserRepository uniqueUserRepository;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -96,5 +98,10 @@ public class UserServiceImpl implements UserService {
         }
 
         userRepository.saveAll(users);
+    }
+
+    @Override
+    public Long getCountUniqueUsers() {
+        return uniqueUserRepository.count();
     }
 }

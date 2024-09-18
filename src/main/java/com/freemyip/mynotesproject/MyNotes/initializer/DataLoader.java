@@ -9,6 +9,5 @@ import org.springframework.stereotype.Component;
 public class DataLoader implements CommandLineRunner {
 
     @Override
-    public void run(String... args) {
-    }
+    public void run(String... args) {}
 }

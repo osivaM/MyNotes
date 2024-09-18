@@ -65,6 +65,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                                 .role(Role.USER)
                                 .registrationDate(LocalDateTime.now())
                                 .telegramId(chatId)
+                                .notDeletion(false)
                                 .build();
 
                         userRepository.save(user);

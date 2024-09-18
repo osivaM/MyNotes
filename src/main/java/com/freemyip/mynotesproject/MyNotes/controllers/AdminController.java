@@ -3,13 +3,13 @@ package com.freemyip.mynotesproject.MyNotes.controllers;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.freemyip.mynotesproject.MyNotes.models.User;
 import com.freemyip.mynotesproject.MyNotes.services.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -17,9 +17,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
     private final UserService userService;
 
-    @GetMapping("/admin")
+    @GetMapping("/users")
     @JsonView(User.AdminViews.class)
-    public ResponseEntity<User> admin(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(userService.getUserByUsername(userDetails.getUsername()));
+    public ResponseEntity<List<User>> admin() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    @DeleteMapping("/delete-user")
+    public ResponseEntity<HttpStatus> deleteUser(@RequestParam("id") Long id) {
+        try {
+            userService.deleteUserById(id);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/set-deletion-status")
+    public ResponseEntity<HttpStatus> setDeletionStatus(@RequestBody List<User> userList) {
+        userService.setDeletionStatus(userList);
+
+        return ResponseEntity.noContent().build();
     }
 }

@@ -5,7 +5,7 @@ import com.freemyip.mynotesproject.MyNotes.repositories.content.NoteCategoryRepo
 import com.freemyip.mynotesproject.MyNotes.repositories.content.NoteRepository;
 import com.freemyip.mynotesproject.MyNotes.models.User;
 import com.freemyip.mynotesproject.MyNotes.repositories.UserRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,19 +14,19 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class UserDeleteService {
 
-    private UserRepository userRepository;
-    private NoteCategoryRepository noteCategoryRepository;
-    private NoteRepository noteRepository;
-    private UserStatusRepository userStatusRepository;
+    private final UserRepository userRepository;
+    private final NoteCategoryRepository noteCategoryRepository;
+    private final NoteRepository noteRepository;
+    private final UserStatusRepository userStatusRepository;
 
     @Scheduled(fixedRate = 3600000)
     @Transactional
     public void deleteUser() {
         LocalDateTime oneDay = LocalDateTime.now().minusDays(1L);
-        List<User> usersToDelete = userRepository.findAllByRegistrationDateBeforeAndIdNotIn(oneDay, List.of(1L, 2L, 3L));
+        List<User> usersToDelete = userRepository.findAllByRegistrationDateBeforeAndNotDeletionFalse(oneDay);
 
         for (User user : usersToDelete) {
             Long userId = user.getId();

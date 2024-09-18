@@ -48,6 +48,9 @@ public class User implements UserDetails {
     @JsonView(AdminViews.class)
     private Role role;
 
+    @JsonView(AdminViews.class)
+    private boolean notDeletion;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));

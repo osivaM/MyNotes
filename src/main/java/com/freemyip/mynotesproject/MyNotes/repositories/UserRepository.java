@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends ListCrudRepository<User, Long> {
-    List<User> findAllByRegistrationDateBeforeAndIdNotIn(LocalDateTime date, List<Long> userIds);
+    List<User> findAllByRegistrationDateBeforeAndNotDeletionFalse(LocalDateTime data);
     Optional<User> findUserById(Long id);
     Optional<User> findUserByUsername(String username);
     Optional<User> findUserByTelegramId(Long id);

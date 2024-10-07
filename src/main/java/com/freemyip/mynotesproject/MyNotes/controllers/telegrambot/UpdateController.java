@@ -8,7 +8,6 @@ import com.freemyip.mynotesproject.MyNotes.services.UserStatusService;
 import com.freemyip.mynotesproject.MyNotes.services.content.NoteCategoryService;
 import com.freemyip.mynotesproject.MyNotes.services.content.NoteService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
 import org.telegram.telegrambots.meta.api.methods.send.*;
 import org.telegram.telegrambots.meta.api.objects.*;
@@ -22,7 +21,6 @@ import java.util.*;
 
 @Controller
 @RequiredArgsConstructor
-@Log4j2
 public class UpdateController {
     private TelegramBot telegramBot;
     private final UserStatusService userStatusService;
@@ -38,7 +36,7 @@ public class UpdateController {
 
     public void checkUpdate(Update update) {
         if (update == null) {
-            log.info("Update is null");
+            System.out.println("Update is null");
 
             return;
         }
@@ -157,7 +155,7 @@ public class UpdateController {
             restartTimer(userStatus, null);
         } else {
             createSendMessage(update, "Unsupported message", null);
-            log.info(message.getChatId() + " unsupported message.");
+            System.out.println(message.getChatId() + " unsupported message.");
         }
 
         userStatusService.updateUserStatus(userStatus);
